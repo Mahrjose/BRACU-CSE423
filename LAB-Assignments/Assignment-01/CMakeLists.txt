@@ -3,7 +3,7 @@ project(OpenGL-Project)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(OpenGL-Project src/main.cpp)
+add_executable(OpenGL-Project src/Task-02.cpp)
 # file(GLOB SOURCES "src/*.cpp")
 # add_executable(OpenGL-Project ${SOURCES})
 
