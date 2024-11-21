@@ -10,8 +10,6 @@
 #include <string>
 #include <vector>
 
-// TODO : Understand these, Try making these in Cstring, understand struct and enums & the code logics
-
 struct ShaderProgramSource {
     std::string VertexSource;
     std::string FragmentSource;
@@ -89,6 +87,8 @@ static unsigned int createShader(const std::string& vertexShader, const std::str
     return program;
 }
 
+/*----------------------------------------- TASK 01 START ---------------------------------------*/
+
 std::vector<float> raindrops;
 
 void generateRaindrops() {
@@ -96,7 +96,7 @@ void generateRaindrops() {
 
     float start_x = -1.0f;
     float end_x = 1.0f;
-    int cols = 24;
+    int cols = 21;
     float col_gaps = (end_x - start_x) / (cols - 1);
 
     float gap = 0.06f;
@@ -112,21 +112,24 @@ void generateRaindrops() {
             float start_y = current_y;
             float end_y = start_y - size;
 
+            // Don't overlap with house roof left
             if (current_x >= -0.8f && current_x <= 0.0f) {
-                float roof_y = 0.75f * current_x + 0.6f;
-                if (end_y <= roof_y) {
+                float roof_y = 0.75f * current_x + 0.6f;  // line equation = 0.75x + 0.6
+                if (end_y < roof_y) {
                     current_y = end_y - gap;
                     continue;
                 }
             }
 
+            // Don't overlap with house roof right
             if (current_x >= 0.0f && current_x <= 0.8f) {
-                float roof_y = -0.75f * current_x + 0.6f;
-                if (end_y <= roof_y) {
+                float roof_y = -0.75f * current_x + 0.6f;  // line equation = 0.75x + 0.6
+                if (end_y < roof_y) {
                     current_y = end_y - gap;
                     continue;
                 }
             }
+
             raindrops.push_back(current_x);
             raindrops.push_back(start_y);
             raindrops.push_back(current_x);
@@ -141,20 +144,19 @@ float currentRotation = 0.0f;      // Current rotation in degrees
 const float maxRotation = 44.0f;   // Maximum rotation in either direction
 const float rotationStep = 11.0f;  // Degrees to rotate per key press
 
-bool keyPressed = false;  // Tracks if a key is currently pressed
+bool keyPressed = false;
 
 void updateRaindrops(GLFWwindow* window, const unsigned int& rainVBO) {
-    // Detect key press and handle rotation
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && !keyPressed) {
         if (currentRotation > -maxRotation) {
             currentRotation -= rotationStep;  // Rotate left
-            keyPressed = true;                // Prevent further rotation until key is released
+            keyPressed = true;
         }
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && !keyPressed) {
         if (currentRotation < maxRotation) {
             currentRotation += rotationStep;  // Rotate right
-            keyPressed = true;                // Prevent further rotation until key is released
+            keyPressed = true;
         }
     }
     // Reset keyPressed when no key is pressed
@@ -164,7 +166,7 @@ void updateRaindrops(GLFWwindow* window, const unsigned int& rainVBO) {
     }
 
     // Convert current rotation to radians
-    float angle = currentRotation * (M_PI / 180.0f);  // Degrees to radians
+    float angle = currentRotation * (M_PI / 180.0f);  // angle = degree * (pi / 180)
     float cosAngle = cos(angle);
     float sinAngle = sin(angle);
 
@@ -177,8 +179,8 @@ void updateRaindrops(GLFWwindow* window, const unsigned int& rainVBO) {
         float y2 = raindrops[i + 3];
 
         // Calculate center of the raindrop
-        float centerX = x1;  // Both x1 and x2 are the same
-        float centerY = (y1 + y2) / 2.0f;
+        float centerX = x1;
+        float centerY = (y1 + y2) / 2.0f;  // midpoint of y1 & y2
 
         // Rotate start point
         float startX = x1 - centerX;  // Translate to origin
@@ -192,7 +194,6 @@ void updateRaindrops(GLFWwindow* window, const unsigned int& rainVBO) {
         float rotatedEndX = endX * cosAngle - endY * sinAngle;
         float rotatedEndY = endX * sinAngle + endY * cosAngle;
 
-        // Translate back to original position and update the vector
         raindrops[i] = rotatedStartX + centerX;      // x1
         raindrops[i + 1] = rotatedStartY + centerY;  // y1
         raindrops[i + 2] = rotatedEndX + centerX;    // x2
@@ -249,65 +250,62 @@ int main(void) {
 
     std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
 
+    /*---------------------------- Vertex Data for the House -------------------------*/
+
     float positions[] = {
-        // Roof
-        0.0f, 0.6f,   // Vertex 0: Top of roof
-        -0.8f, 0.0f,  // Vertex 1: Left corner of roof
-        0.8f, 0.0f,   // Vertex 2: Right corner of roof
-
-        // Walls
-        -0.8f, -0.8f,  // Vertex 3: Bottom left corner of house
-        0.8f, -0.8f,   // Vertex 4: Bottom right corner of house
-
-        // Door
-        -0.2f, -0.8f,  // Vertex 5: Bottom left of door
-        -0.2f, -0.2f,  // Vertex 6: Top left of door
-        0.2f, -0.2f,   // Vertex 7: Top right of door
-        0.2f, -0.8f,   // Vertex 8: Bottom right of door
-
-        // Left Window
-        -0.6f, -0.4f,  // Vertex 9: Bottom left of left window
-        -0.6f, -0.2f,  // Vertex 10: Top left of left window
-        -0.4f, -0.2f,  // Vertex 11: Top right of left window
-        -0.4f, -0.4f,  // Vertex 12: Bottom right of left window
-
-        // Right Window
-        0.4f, -0.4f,  // Vertex 13: Bottom left of right window
-        0.4f, -0.2f,  // Vertex 14: Top left of right window
-        0.6f, -0.2f,  // Vertex 15: Top right of right window
-        0.6f, -0.4f   // Vertex 16: Bottom right of right window
+        0.0f, 0.6f,    // Vertex 0
+        -0.8f, 0.0f,   // Vertex 1
+        0.8f, 0.0f,    // Vertex 2
+        -0.8f, -0.8f,  // Vertex 3
+        0.8f, -0.8f,   // Vertex 4
+        -0.2f, -0.8f,  // Vertex 5
+        -0.2f, -0.2f,  // Vertex 6
+        0.2f, -0.2f,   // Vertex 7
+        0.2f, -0.8f,   // Vertex 8
+        -0.6f, -0.4f,  // Vertex 9
+        -0.6f, -0.2f,  // Vertex 10
+        -0.4f, -0.2f,  // Vertex 11
+        -0.4f, -0.4f,  // Vertex 12
+        0.4f, -0.4f,   // Vertex 13
+        0.4f, -0.2f,   // Vertex 14
+        0.6f, -0.2f,   // Vertex 15
+        0.6f, -0.4f    // Vertex 16
     };
 
     unsigned int indices[] = {
         // Roof
-        0, 1,  // Top-left edge of roof
-        1, 2,  // Bottom edge of roof
-        2, 0,  // Top-right edge of roof
+        0, 1,
+        1, 2,
+        2, 0,
 
         // Walls
-        1, 3,  // Left wall edge
-        3, 4,  // Bottom wall edge
-        4, 2,  // Right wall edge
+        1, 3,
+        3, 4,
+        4, 2,
 
         // Door
-        5, 6,  // Left side of door
-        6, 7,  // Top side of door
-        7, 8,  // Right side of door
-        8, 5,  // Bottom side of door
+        5, 6,
+        6, 7,
+        7, 8,
+        8, 5,
 
         // Left Window
-        9, 10,   // Left side of left window
-        10, 11,  // Top side of left window
-        11, 12,  // Right side of left window
-        12, 9,   // Bottom side of left window
+        9, 10,
+        10, 11,
+        11, 12,
+        12, 9,
 
         // Right Window
-        13, 14,  // Left side of right window
-        14, 15,  // Top side of right window
-        15, 16,  // Right side of right window
-        16, 13   // Bottom side of right window
+        13, 14,
+        14, 15,
+        15, 16,
+        16, 13
+
     };
 
+    /*------------------------------- OpenGL Setup -------------------------------*/
+
+    // Vertex Array Object
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -321,7 +319,7 @@ int main(void) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
     glEnableVertexAttribArray(0);
 
-    // Index / Element Buffer Object
+    // Element Buffer Object
     unsigned int EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -331,11 +329,11 @@ int main(void) {
     generateRaindrops();
 
     // Debug Print out the rain position vector
-    std::cout << "[ ";
+    std::cout << "Raindrops Positions Vector : { ";
     for (int i = 0; i < raindrops.size(); i++) {
         std::cout << raindrops[i] << ", ";
     }
-    std::cout << " ]" << std::endl;
+    std::cout << " }" << std::endl;
 
     unsigned int rainVBO;
     glGenBuffers(1, &rainVBO);
@@ -345,7 +343,7 @@ int main(void) {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
 
-    /*-------------------------------Shader Setup-----------------------------------*/
+    /*------------------------------- Shader Setup -----------------------------------*/
 
     // Load Shaders
     ShaderProgramSource houseSource = parseShader("../resources/shaders/house.shader");
@@ -377,6 +375,7 @@ int main(void) {
         glfwPollEvents();
     }
 
+    // Clean up
     glDeleteProgram(houseShader);
     glDeleteProgram(rainShader);
     glfwTerminate();

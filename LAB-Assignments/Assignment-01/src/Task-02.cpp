@@ -1,7 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
@@ -9,8 +8,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-// TODO : Understand these, Try making these in Cstring, understand struct and enums & the code logics
 
 struct ShaderProgramSource {
     std::string VertexSource;
@@ -89,6 +86,8 @@ static unsigned int createShader(const std::string& vertexShader, const std::str
     return program;
 }
 
+/*----------------------------------------- TASK 02 START ---------------------------------------*/
+
 struct Point {
     float x, y;      // Position
     float dx, dy;    // Direction
@@ -165,7 +164,6 @@ void renderPoints(unsigned int pointShader) {
         float g = point.color[1];
         float b = point.color[2];
 
-        // Apply blinking logic
         if (point.blink) {
             static bool blinkState = false;
             blinkState = !blinkState;
@@ -198,6 +196,8 @@ int main(void) {
 
     std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
 
+    /*---------------------------- Vertex Data for the Box -------------------------*/
+
     float positions[] = {
         -0.8f, -0.8f,
         0.8f, -0.8f,
@@ -214,6 +214,9 @@ int main(void) {
 
     };
 
+    /*------------------------------- OpenGL Setup -------------------------------*/
+
+    // Vertex Array Object
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -227,7 +230,7 @@ int main(void) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
     glEnableVertexAttribArray(0);
 
-    // Index / Element Buffer Object
+    // Element Buffer Object
     unsigned int EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -235,7 +238,7 @@ int main(void) {
 
     /*-------------------------------Shader Setup-----------------------------------*/
 
-    // Load Shaders
+    // Load & Process Shaders
     ShaderProgramSource boxSource = parseShader("../resources/shaders/box.shader");
     unsigned int boxShader = createShader(boxSource.VertexSource, boxSource.FragmentSource);
 
